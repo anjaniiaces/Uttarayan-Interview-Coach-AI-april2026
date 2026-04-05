@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-sans: 'Inter', sans-serif;
+    --font-display: 'Outfit', sans-serif;
+
+    /* Uttarayan Palette - Light & Warm Festive Theme */
+    --background: 34 100% 98%;    /* #FFF9F1 - Cream */
+    --foreground: 342 66% 11%;    /* #2D0A1A - Deep Wine */
+
+    --card: 0 0% 100%;             
+    --card-foreground: 342 66% 11%;
+
+    --primary: 31 96% 56%;         /* Saffron Orange */
+    --secondary: 18 90% 45%;       /* Warm Burnt Orange */
+
+    --muted: 34 20% 90%;
+    --muted-foreground: 342 20% 40%;
+    --border: 34 30% 88%;          
+    --radius: 0.75rem;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+    background-image: 
+      radial-gradient(circle at 90% 10%, rgba(251, 139, 36, 0.15), transparent 45%),
+      radial-gradient(circle at 10% 90%, rgba(251, 139, 36, 0.08), transparent 45%);
+    background-attachment: fixed;
+  }
+
+  /* Force headers to use the Uttarayan Deep Red for better visibility */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    @apply tracking-tight;
+    color: #9A031E !important; 
+  }
+}
+
+@layer utilities {
+  /* FIX FOR DISAPPEARING TEXT: Forces common text containers to be dark on the cream background */
+  .text-white.text-opacity-90, 
+  .text-slate-100,
+  .text-zinc-100 {
+    color: #460B2F !important; /* Deep Earthy Wine */
+  }
+
+  /* Target the Session Overview area specifically */
+  .session-overview h1, 
+  .session-overview p, 
+  .session-overview span {
+    color: #460B2F !important;
+  }
+
+  /* Uttarayan Gradient (More Orange, Less Maroon) */
+  .bg-gradient-to-r, 
+  .bg-gradient-to-br,
+  .bg-gradient-to-tr,
+  .hover\:bg-gradient-to-br:hover {
+    background-image: linear-gradient(135deg, #FB8B24 0%, #E36414 100%) !important;
+    border: none !important;
+    color: white !important;
+  }
+
+  /* Interview Cards Hover */
+  .glass-card:hover {
+    background-image: linear-gradient(135deg, #FB8B24 0%, #F07111 100%) !important;
+    color: white !important;
+  }
+
+  /* Ensure text inside card turns white ON HOVER ONLY */
+  .glass-card:hover * {
+    color: white !important;
+    stroke: white !important;
+  }
+
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-xl border border-orange-200/30 shadow-xl shadow-orange-900/5;
+  }
+
+  .glass-card {
+    @apply bg-white/60 backdrop-blur-md border border-orange-100/50 transition-all duration-300;
+    color: #460B2F; /* Default card text color */
+  }
+
+  /* Pulse for Recording */
+  @keyframes record-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(251, 139, 36, 0.6); }
+    70% { box-shadow: 0 0 0 20px rgba(251, 139, 36, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(251, 139, 36, 0); }
+  }
+
+  .animate-record-pulse {
+    background-color: #FB8B24 !important;
+    animation: record-pulse 2s infinite;
+  }
+
+  /* Static icons should stay Deep Red */
+  .bg-red-900, .bg-destructive {
+    background-color: #9A031E !important;
+  }
+}

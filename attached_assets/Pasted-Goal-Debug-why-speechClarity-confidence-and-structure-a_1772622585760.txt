@@ -1,0 +1,116 @@
+Goal: Debug why `speechClarity`, `confidence`, and `structure` are saved as NULL in the database even though they are returned from the OpenAI API.
+
+Project Stack:
+
+* Express backend
+* Drizzle ORM
+* PostgreSQL
+* OpenAI GPT-4.1
+* React frontend with React Query
+
+Files involved:
+
+* server/routes.ts
+* server/storage.ts
+* shared/schema.ts
+* shared/routes.ts
+
+Expected Flow:
+
+1. OpenAI returns JSON containing:
+   {
+   "feedback": "...",
+   "score": 40,
+   "speechClarity": 5,
+   "confidence": 6,
+   "structure": 4
+   }
+
+2. routes.ts parses the JSON and extracts these values.
+
+3. routes.ts calls:
+   storage.updateQuestionWithAnswer(
+   questionId,
+   transcript,
+   feedback,
+   score,
+   speechClarity,
+   confidence,
+   structure
+   )
+
+4. storage.ts performs:
+   db.update(questions)
+   .set({
+   transcript,
+   feedback,
+   score,
+   speechClarity,
+   confidence,
+   structure,
+   status: "completed"
+   })
+   .where(eq(questions.id, id))
+
+Problem:
+Database columns `speech_clarity`, `confidence`, `structure` remain NULL after update.
+
+Debugger Tasks:
+
+1. Confirm OpenAI response contains the fields:
+   speechClarity
+   confidence
+   structure
+
+2. Confirm routes.ts correctly parses them and logs:
+
+   console.log("Parsed AI Analysis", {
+   speechClarity,
+   confidence,
+   structure
+   })
+
+3. Confirm routes.ts sends correct values into:
+   storage.updateQuestionWithAnswer()
+
+4. Confirm storage.ts receives the values and logs:
+
+   console.log("Saving to DB", {
+   speechClarity,
+   confidence,
+   structure
+   })
+
+5. Verify Drizzle ORM update query actually updates the columns:
+   speech_clarity
+   confidence
+   structure
+
+6. Check if the Drizzle schema mapping is correct:
+
+   speechClarity: integer("speech_clarity")
+
+7. Check if the update statement is silently failing due to:
+
+   * undefined values
+   * incorrect column names
+   * missing `.returning()`
+   * migration mismatch
+
+8. Print the final SQL query Drizzle generates.
+
+Expected SQL should look like:
+
+UPDATE questions
+SET
+transcript = ...,
+feedback = ...,
+score = ...,
+speech_clarity = ...,
+confidence = ...,
+structure = ...,
+status = 'completed'
+WHERE id = ...
+
+Goal:
+Identify exactly where the values become NULL.
