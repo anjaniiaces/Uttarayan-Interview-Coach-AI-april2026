@@ -6,9 +6,15 @@ import { z } from "zod";
 import OpenAI from "openai";
 import multer from "multer";
 import mammoth from "mammoth";
+import path from "path";
 import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
+// __filename is available in CJS (production build); falls back to cwd in ESM (dev)
+const _require = createRequire(
+  typeof __filename === "string"
+    ? __filename
+    : path.join(process.cwd(), "server", "routes.ts")
+);
+const pdfParse = _require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
