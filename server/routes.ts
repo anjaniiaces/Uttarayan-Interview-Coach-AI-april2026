@@ -4,10 +4,20 @@ import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import OpenAI from "openai";
+import multer from "multer";
+import mammoth from "mammoth";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+});
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
 });
 
 export async function registerRoutes(
@@ -18,6 +28,35 @@ export async function registerRoutes(
   app.get(api.interviews.list.path, async (req, res) => {
     const interviews = await storage.getInterviews();
     res.json(interviews);
+  });
+
+  // ── Document parsing endpoint ──────────────────────────────────────────────
+  app.post("/api/parse-document", upload.single("file"), async (req: any, res) => {
+    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+    const { mimetype, originalname, buffer } = req.file;
+    try {
+      let text = "";
+      if (mimetype === "text/plain" || originalname.endsWith(".txt")) {
+        text = buffer.toString("utf-8");
+      } else if (mimetype === "application/pdf" || originalname.endsWith(".pdf")) {
+        const data = await pdfParse(buffer);
+        text = data.text;
+      } else if (
+        mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        originalname.endsWith(".docx")
+      ) {
+        const result = await mammoth.extractRawText({ buffer });
+        text = result.value;
+      } else if (originalname.endsWith(".doc")) {
+        return res.status(400).json({ message: "Old .doc format is not supported. Please save as .docx, .pdf, or .txt" });
+      } else {
+        return res.status(400).json({ message: "Unsupported file type. Please upload a PDF, Word (.docx), or plain text file." });
+      }
+      res.json({ text: text.trim() });
+    } catch (err) {
+      console.error("Document parse error:", err);
+      res.status(500).json({ message: "Failed to extract text from the file. Please try copy-pasting instead." });
+    }
   });
 
   app.get(api.interviews.get.path, async (req, res) => {
