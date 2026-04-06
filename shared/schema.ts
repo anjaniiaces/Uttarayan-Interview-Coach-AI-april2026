@@ -5,6 +5,8 @@ import { z } from "zod";
 export const interviews = pgTable("interviews", {
   id: serial("id").primaryKey(),
   role: text("role").notNull(),
+  jobDescription: text("job_description"),
+  resumeSummary: text("resume_summary"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
