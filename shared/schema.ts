@@ -49,7 +49,11 @@ export const sessionReports = pgTable("session_reports", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertInterviewSchema = createInsertSchema(interviews).pick({ role: true });
+export const insertInterviewSchema = createInsertSchema(interviews).pick({
+  role: true,
+  jobDescription: true,
+  resumeSummary: true,
+});
 export const insertQuestionSchema = createInsertSchema(questions).pick({ interviewId: true, questionText: true });
 export const insertSessionReportSchema = createInsertSchema(sessionReports).omit({ id: true, createdAt: true });
 

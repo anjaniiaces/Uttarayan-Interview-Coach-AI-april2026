@@ -33,8 +33,29 @@ export async function registerRoutes(
       const input = api.interviews.create.input.parse(req.body);
       const interview = await storage.createInterview(input);
 
-      // Generate some default questions for the role
-      const prompt = `Generate 5 standard behavioral interview questions for a ${input.role} position. Format the output as a JSON array of strings. Only return the JSON array, no other text.`;
+      // Generate questions tailored to role, JD, and resume if provided
+      const hasJD = input.jobDescription?.trim();
+      const hasResume = input.resumeSummary?.trim();
+
+      let prompt = "";
+
+      if (hasJD || hasResume) {
+        prompt = `You are an expert interview coach preparing highly targeted interview questions.
+
+Role: ${input.role}
+${hasJD ? `\nJob Description:\n${input.jobDescription}\n` : ""}${hasResume ? `\nCandidate Resume / Experience Summary:\n${input.resumeSummary}\n` : ""}
+Generate exactly 5 interview questions that are:
+1. Specifically tailored to the skills, responsibilities, and requirements mentioned in the job description (if provided).
+2. Probing the candidate's actual experience, projects, and exposure highlighted in their resume/summary (if provided).
+3. A mix of behavioural (STAR-based), situational, and role-specific technical/domain questions.
+4. Progressively deeper — start with a broad opening question and move to specific, challenging ones.
+
+Do NOT ask generic questions like "Where do you see yourself in 5 years?" — every question must be grounded in the provided JD or resume context.
+
+Return ONLY a valid JSON array of 5 question strings. No extra text.`;
+      } else {
+        prompt = `Generate 5 strong behavioural and role-specific interview questions for a ${input.role} position. Mix broad opening questions with deeper situational ones. Format as a JSON array of strings. Return only the JSON array, no other text.`;
+      }
 
       const response = await openai.chat.completions.create({
         model: "gpt-4.1",
