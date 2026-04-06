@@ -226,14 +226,18 @@ export default function SessionReport() {
       : (report.overallScore ?? 0) >= 50 ? [249, 115, 22] as [number, number, number]
       : [239, 68, 68] as [number, number, number];
 
+    // Badge box: top=y+4, height=24, center=y+16
     doc.setFillColor(...perfColor);
-    doc.roundedRect(pageW - margin - 42, y + 5, 42, 22, 3, 3, "F");
+    doc.roundedRect(pageW - margin - 44, y + 4, 44, 24, 3, 3, "F");
     doc.setTextColor(255, 255, 255);
+    // Score number — baseline at y+17 centres the numeral vertically
     doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
-    doc.text(`${report.overallScore ?? 0}`, pageW - margin - 21, y + 19, { align: "center" });
+    doc.text(`${report.overallScore ?? 0}`, pageW - margin - 22, y + 17, { align: "center" });
+    // "OVERALL SCORE" label — 2 mm below score, centred on same X
     doc.setFontSize(7);
-    doc.text("OVERALL SCORE", pageW - margin - 21, y + 25, { align: "center" });
+    doc.setFont("helvetica", "normal");
+    doc.text("OVERALL SCORE", pageW - margin - 22, y + 23, { align: "center" });
 
     y += 40;
 
@@ -360,7 +364,7 @@ export default function SessionReport() {
 
     const qBody = completedQuestions.map((q, i) => [
       `Q${i + 1}`,
-      q.questionText.length > 55 ? q.questionText.slice(0, 52) + "..." : q.questionText,
+      q.questionText.length > 46 ? q.questionText.slice(0, 43) + "..." : q.questionText,
       `${q.score ?? 0}/100`,
       `${q.speechClarity ?? 0}/10`,
       `${q.confidence ?? 0}/10`,
@@ -370,18 +374,19 @@ export default function SessionReport() {
     autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
-      head: [["#", "Question", "Score", "Clarity", "Confid.", "Struct."]],
+      head: [["#", "Question", "Score", "Clarity", "Confidence", "Structure"]],
       body: qBody,
+      styles: { cellPadding: 1.5, overflow: "ellipsize" },
       headStyles: { fillColor: [75, 75, 80], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8 },
       bodyStyles: { fontSize: 8, textColor: [40, 40, 40] },
       alternateRowStyles: { fillColor: [248, 248, 252] },
       columnStyles: {
-        0: { cellWidth: 9 },
-        1: { cellWidth: 75 },
-        2: { cellWidth: 20, halign: "center" },
-        3: { cellWidth: 18, halign: "center" },
-        4: { cellWidth: 18, halign: "center" },
-        5: { cellWidth: 18, halign: "center" },
+        0: { cellWidth: 7 },
+        1: { cellWidth: 60 },
+        2: { cellWidth: 18, halign: "center" },
+        3: { cellWidth: 16, halign: "center" },
+        4: { cellWidth: 20, halign: "center" },
+        5: { cellWidth: 20, halign: "center" },
       },
     });
 
