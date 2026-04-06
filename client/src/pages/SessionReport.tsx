@@ -251,21 +251,26 @@ export default function SessionReport() {
     autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
-      head: [["Metric", "Score", "Rating"]],
+      head: [[
+        { content: "Metric",  styles: { halign: "left" } },
+        { content: "Score",   styles: { halign: "center" } },
+        { content: "Rating",  styles: { halign: "center" } },
+      ]],
       body: [
-        ["Overall Score", `${report.overallScore ?? 0} / 100`, performanceLabel(report.overallScore, 100)],
-        ["Speech Clarity", `${report.avgSpeechClarity ?? 0} / 10`, performanceLabel(report.avgSpeechClarity, 10)],
-        ["Confidence", `${report.avgConfidence ?? 0} / 10`, performanceLabel(report.avgConfidence, 10)],
-        ["Answer Structure", `${report.avgStructure ?? 0} / 10`, performanceLabel(report.avgStructure, 10)],
+        ["Overall Score",    `${report.overallScore ?? 0} / 100`,        performanceLabel(report.overallScore, 100)],
+        ["Speech Clarity",   `${report.avgSpeechClarity ?? 0} / 10`,     performanceLabel(report.avgSpeechClarity, 10)],
+        ["Confidence",       `${report.avgConfidence ?? 0} / 10`,        performanceLabel(report.avgConfidence, 10)],
+        ["Answer Structure", `${report.avgStructure ?? 0} / 10`,         performanceLabel(report.avgStructure, 10)],
         ["Total Filler Words", `${report.totalFillerWords ?? 0}`, (report.totalFillerWords ?? 0) <= 5 ? "Excellent" : (report.totalFillerWords ?? 0) <= 15 ? "Moderate" : "High"],
       ],
+      styles: { cellPadding: 1.5 },
       headStyles: { fillColor: [205, 85, 0], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 9 },
       bodyStyles: { fontSize: 9, textColor: [40, 40, 40] },
       alternateRowStyles: { fillColor: [250, 247, 242] },
       columnStyles: {
-        0: { fontStyle: "bold", cellWidth: 90 },
-        1: { cellWidth: 42, halign: "center" },
-        2: { fontStyle: "bold", cellWidth: 42, halign: "center" },
+        0: { fontStyle: "bold", cellWidth: 82 },
+        1: { cellWidth: 40, halign: "center" },
+        2: { fontStyle: "bold", cellWidth: 40, halign: "center" },
       },
     });
 
