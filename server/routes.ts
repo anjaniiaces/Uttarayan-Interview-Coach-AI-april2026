@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import OpenAI from "openai";
+import OpenAI, { toFile } from "openai";
 import multer from "multer";
 import mammoth from "mammoth";
 import path from "path";
@@ -62,6 +62,26 @@ export async function registerRoutes(
     } catch (err) {
       console.error("Document parse error:", err);
       res.status(500).json({ message: "Failed to extract text from the file. Please try copy-pasting instead." });
+    }
+  });
+
+  // ── Audio transcription via Whisper ──
+  app.post("/api/transcribe-audio", upload.single("audio"), async (req: any, res) => {
+    if (!req.file) return res.status(400).json({ message: "No audio uploaded" });
+    try {
+      const ext = req.file.originalname?.split(".").pop() || "webm";
+      const file = await toFile(req.file.buffer, `recording.${ext}`, {
+        type: req.file.mimetype || "audio/webm",
+      });
+      const transcription = await openai.audio.transcriptions.create({
+        model: "whisper-1",
+        file,
+        language: "en",
+      });
+      res.json({ transcript: transcription.text });
+    } catch (err) {
+      console.error("Whisper transcription error:", err);
+      res.status(500).json({ message: "Audio transcription failed." });
     }
   });
 
