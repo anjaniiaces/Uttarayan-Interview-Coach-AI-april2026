@@ -66,21 +66,40 @@ export async function registerRoutes(
   });
 
   // ── Audio transcription via Whisper ──
-  app.post("/api/transcribe-audio", upload.single("audio"), async (req: any, res) => {
-    if (!req.file) return res.status(400).json({ message: "No audio uploaded" });
+  const audioUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB
+  });
+  app.post("/api/transcribe-audio", audioUpload.single("audio"), async (req: any, res) => {
+    if (!req.file) {
+      console.error("[Whisper] No audio file received");
+      return res.status(400).json({ message: "No audio uploaded" });
+    }
+    const sizeKB = Math.round(req.file.buffer.length / 1024);
+    console.log(`[Whisper] Received audio: ${req.file.originalname}, size=${sizeKB}KB, mime=${req.file.mimetype}`);
+    if (req.file.buffer.length < 1000) {
+      console.error("[Whisper] Audio too short (<1KB) — likely empty recording");
+      return res.status(400).json({ message: "Audio recording was too short or empty." });
+    }
     try {
-      const ext = req.file.originalname?.split(".").pop() || "webm";
-      const file = await toFile(req.file.buffer, `recording.${ext}`, {
-        type: req.file.mimetype || "audio/webm",
-      });
+      // Use a clean MIME type — strip codec params Whisper doesn't need
+      const rawMime = (req.file.mimetype || "audio/webm").split(";")[0].trim();
+      const extMap: Record<string, string> = {
+        "audio/webm": "webm", "audio/mp4": "mp4", "audio/ogg": "ogg",
+        "audio/mpeg": "mp3", "audio/wav": "wav",
+      };
+      const ext  = extMap[rawMime] || (req.file.originalname?.split(".").pop() ?? "webm");
+      const file = await toFile(req.file.buffer, `recording.${ext}`, { type: rawMime });
       const transcription = await openai.audio.transcriptions.create({
         model: "whisper-1",
         file,
         language: "en",
+        prompt: "This is a job interview answer in English. The candidate may use professional or financial terminology.",
       });
+      console.log(`[Whisper] Success: ${transcription.text.slice(0, 80)}…`);
       res.json({ transcript: transcription.text });
-    } catch (err) {
-      console.error("Whisper transcription error:", err);
+    } catch (err: any) {
+      console.error("[Whisper] API error:", err?.message ?? err);
       res.status(500).json({ message: "Audio transcription failed." });
     }
   });
